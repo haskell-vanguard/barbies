@@ -62,6 +62,7 @@ module Data.Barbie
   (
     -- * Functor
     FunctorB(bmap)
+  , FunctorB_(bmap_)
 
     -- * Traversable
   , TraversableB(btraverse)
@@ -90,8 +91,9 @@ module Data.Barbie
   , buniqC
   , bmempty
 
-    -- * Wrapper
+    -- * Wrappers
   , Barbie(..)
+  , FlipB(..)
 
     -- * Trivial Barbies
   , Void
@@ -112,7 +114,8 @@ where
 import           Data.Barbie.Internal.Constraints (AllBF, ConstraintsB (..), bmapC, btraverseC)
 import qualified Data.Barbie.Internal.Constraints as Deprecated
 
-import Data.Barbie.Internal.Functor(FunctorB(..))
+import Data.Barbie.Internal.FlipB (FlipB(..))
+import Data.Barbie.Internal.Functor(FunctorB(..), FunctorB_(..))
 import Data.Barbie.Internal.Instances(Barbie(..))
 import Data.Barbie.Internal.Product
   ( ProductB(..)

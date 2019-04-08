@@ -36,6 +36,7 @@ library
       Data.Barbie.Internal.Bare
       Data.Barbie.Internal.Constraints
       Data.Barbie.Internal.Dicts
+      Data.Barbie.Internal.FlipB
       Data.Barbie.Internal.Functor
       Data.Barbie.Internal.Instances
       Data.Barbie.Internal.Product

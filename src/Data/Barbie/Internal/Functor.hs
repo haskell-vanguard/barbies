@@ -1,11 +1,13 @@
-{-# LANGUAGE PolyKinds    #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE PolyKinds           #-}
+{-# LANGUAGE TypeFamilies        #-}
 module Data.Barbie.Internal.Functor
   ( FunctorB(..)
+  , FunctorB_(..)
 
   , GFunctorB(..)
-  , gbmapDefault
   , CanDeriveFunctorB
+  , CanDeriveFunctorB_
   )
 
 where
@@ -35,7 +37,9 @@ class FunctorB (b :: (k -> Type) -> Type) where
     :: forall f g
     .  CanDeriveFunctorB b f g
     => (forall a . f a -> g a) -> b f -> b g
-  bmap = gbmapDefault
+  bmap h
+    = toN . gbmap @0 h . fromN
+  {-# INLINE bmap #-}
 
 -- | @'CanDeriveFunctorB' B f g@ is in practice a predicate about @B@ only.
 --   Intuitively, it says that the following holds, for any arbitrary @f@:
@@ -51,19 +55,35 @@ class FunctorB (b :: (k -> Type) -> Type) where
 type CanDeriveFunctorB b f g
   = ( GenericN (b f)
     , GenericN (b g)
-    , GFunctorB f g (RepN (b f)) (RepN (b g))
+    , GFunctorB 0 f g (RepN (b f)) (RepN (b g))
     )
 
--- | Default implementation of 'bmap' based on 'Generic'.
-gbmapDefault
-  :: CanDeriveFunctorB b f g
-  => (forall a . f a -> g a) -> b f -> b g
-gbmapDefault f
-  = toN . gbmap f . fromN
-{-# INLINE gbmapDefault #-}
+-- | A version of 'FunctorB' where the argument is in the next to last
+--   position. This includes monad transformers and bifunctors (see
+--   'Data.Barbie.Internal.Bi.BifunctorB').
+--
+--   A 'FunctorB_' can be used as a 'FunctorB' via
+--   'Data.Barbie.Internal.FlipB.FlipB'.
+class FunctorB_ (b :: (k -> Type) -> k2 -> Type) where
+  bmap_ :: (forall a . f a -> g a) -> b f x -> b g x
+
+  default bmap_
+    :: forall f g x
+    .  CanDeriveFunctorB_ b f g x
+    => (forall a . f a -> g a) -> b f x -> b g x
+  bmap_ h
+    = toN . gbmap @1 h . fromN
+  {-# INLINE bmap_ #-}
 
 
-class GFunctorB f g repbf repbg where
+-- | See 'CanDeriveFunctorB'
+type CanDeriveFunctorB_ b f g x
+  = ( GenericN (b f x)
+    , GenericN (b g x)
+    , GFunctorB 1 f g (RepN (b f x)) (RepN (b g x))
+    )
+
+class GFunctorB n f g repbf repbg where
   gbmap :: (forall a . f a -> g a) -> repbf x -> repbg x
 
 
@@ -71,25 +91,25 @@ class GFunctorB f g repbf repbg where
 -- Trivial cases
 -- ----------------------------------
 
-instance GFunctorB f g bf bg => GFunctorB f g (M1 i c bf) (M1 i c bg) where
-  gbmap h = M1 . gbmap h . unM1
+instance GFunctorB n f g bf bg => GFunctorB n f g (M1 i c bf) (M1 i c bg) where
+  gbmap h = M1 . gbmap @n h . unM1
   {-# INLINE gbmap #-}
 
-instance GFunctorB f g V1 V1 where
+instance GFunctorB n f g V1 V1 where
   gbmap _ _ = undefined
 
-instance GFunctorB f g U1 U1 where
+instance GFunctorB n f g U1 U1 where
   gbmap _ = id
   {-# INLINE gbmap #-}
 
-instance(GFunctorB f g l l', GFunctorB f g r r') => GFunctorB f g (l :*: r) (l' :*: r') where
-  gbmap h (l :*: r) = (gbmap h l) :*: gbmap h r
+instance(GFunctorB n f g l l', GFunctorB n f g r r') => GFunctorB n f g (l :*: r) (l' :*: r') where
+  gbmap h (l :*: r) = (gbmap @n h l) :*: gbmap @n h r
   {-# INLINE gbmap #-}
 
-instance(GFunctorB f g l l', GFunctorB f g r r') => GFunctorB f g (l :+: r) (l' :+: r') where
+instance(GFunctorB n f g l l', GFunctorB n f g r r') => GFunctorB n f g (l :+: r) (l' :+: r') where
   gbmap h = \case
-    L1 l -> L1 (gbmap h l)
-    R1 r -> R1 (gbmap h r)
+    L1 l -> L1 (gbmap @n h l)
+    R1 r -> R1 (gbmap @n h r)
   {-# INLINE gbmap #-}
 
 
@@ -97,18 +117,18 @@ instance(GFunctorB f g l l', GFunctorB f g r r') => GFunctorB f g (l :+: r) (l' 
 -- The interesting cases
 -- --------------------------------
 
-type P0 = Param 0
+type P = Param
 
-instance GFunctorB f g (Rec (P0 f a) (f a))
-                       (Rec (P0 g a) (g a)) where
+instance GFunctorB n f g (Rec (P n f a) (f a))
+                         (Rec (P n g a) (g a)) where
   gbmap h (Rec (K1 fa)) = Rec (K1 (h fa))
   {-# INLINE gbmap #-}
 
 instance
   ( SameOrParam b b'
   , FunctorB b'
-  ) => GFunctorB f g (Rec (b (P0 f)) (b' f))
-                     (Rec (b (P0 g)) (b' g)) where
+  ) => GFunctorB n f g (Rec (b (P n f)) (b' f))
+                       (Rec (b (P n g)) (b' g)) where
   gbmap h (Rec (K1 bf)) = Rec (K1 (bmap h bf))
   {-# INLINE gbmap #-}
 
@@ -117,12 +137,12 @@ instance
   , SameOrParam b b'
   , Functor h'
   , FunctorB b'
-  ) => GFunctorB f g (Rec (h (b (P0 f))) (h' (b' f)))
-                     (Rec (h (b (P0 g))) (h' (b' g))) where
+  ) => GFunctorB n f g (Rec (h (b (P n f))) (h' (b' f)))
+                       (Rec (h (b (P n g))) (h' (b' g))) where
   gbmap h (Rec (K1 hbf)) = Rec (K1 (fmap (bmap h) hbf))
   {-# INLINE gbmap #-}
 
-instance GFunctorB f g (Rec x x) (Rec x x) where
+instance GFunctorB n f g (Rec x x) (Rec x x) where
   gbmap _ = id
   {-# INLINE gbmap #-}
 

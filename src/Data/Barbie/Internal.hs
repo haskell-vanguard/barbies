@@ -1,8 +1,8 @@
 module Data.Barbie.Internal
   ( -- * Functor
-    Internal.gbmapDefault
-  , Internal.GFunctorB(..)
+    Internal.GFunctorB(..)
   , Internal.CanDeriveFunctorB
+  , Internal.CanDeriveFunctorB_
 
     -- * Traversable
   , Internal.gbtraverseDefault
