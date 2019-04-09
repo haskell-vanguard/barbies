@@ -12,9 +12,23 @@ module Data.Barbie.Internal.Functor
 
 where
 
+import Control.Applicative.Backwards(Backwards (..))
+import Control.Applicative.Lift(Lift, mapLift )
+import Control.Monad.Trans.Except(ExceptT, mapExceptT)
+import Control.Monad.Trans.Identity(IdentityT, mapIdentityT)
+import Control.Monad.Trans.Maybe(MaybeT, mapMaybeT)
+import Control.Monad.Trans.RWS.Lazy as Lazy (RWST, mapRWST)
+import Control.Monad.Trans.RWS.Strict as Strict (RWST, mapRWST)
+import Control.Monad.Trans.Reader(ReaderT, mapReaderT)
+import Control.Monad.Trans.State.Lazy as Lazy (StateT, mapStateT)
+import Control.Monad.Trans.State.Strict as Strict (StateT, mapStateT)
+import Control.Monad.Trans.Writer.Lazy as Lazy (WriterT, mapWriterT)
+import Control.Monad.Trans.Writer.Strict as Strict (WriterT, mapWriterT)
+
 import Data.Functor.Compose   (Compose (..))
 import Data.Functor.Const     (Const (..))
 import Data.Functor.Product   (Product (..))
+import Data.Functor.Reverse   (Reverse (..))
 import Data.Functor.Sum       (Sum (..))
 import Data.Generics.GenericN
 import Data.Proxy             (Proxy (..))
@@ -171,3 +185,61 @@ instance FunctorB (Const x) where
 instance (Functor f, FunctorB b) => FunctorB (f `Compose` b) where
   bmap h (Compose x) = Compose (bmap h <$> x)
   {-# INLINE bmap #-}
+
+
+-- --------------------------------
+-- Instances for transformers types
+-- --------------------------------
+
+instance FunctorB_ Backwards where
+  bmap_ h (Backwards fa)
+    = Backwards (h fa)
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ Lift where
+  bmap_ h = mapLift h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (ExceptT e) where
+  bmap_ h  = mapExceptT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ IdentityT where
+  bmap_ h  = mapIdentityT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ MaybeT where
+  bmap_ h  = mapMaybeT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (Lazy.RWST r w s) where
+  bmap_ h  = Lazy.mapRWST h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (Strict.RWST r w s) where
+  bmap_ h  = Strict.mapRWST h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (ReaderT r) where
+  bmap_ h  = mapReaderT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (Lazy.StateT s) where
+  bmap_ h  = Lazy.mapStateT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (Strict.StateT s) where
+  bmap_ h  = Strict.mapStateT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (Lazy.WriterT s) where
+  bmap_ h  = Lazy.mapWriterT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ (Strict.WriterT s) where
+  bmap_ h  = Strict.mapWriterT h
+  {-# INLINE bmap_ #-}
+
+instance FunctorB_ Reverse where
+  bmap_ h (Reverse fa) = Reverse (h fa)
+  {-# INLINE bmap_ #-}
