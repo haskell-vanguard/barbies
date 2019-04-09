@@ -31,6 +31,10 @@ library
       Data.Barbie.Internal
       Data.Functor.Prod
 
+  if impl(ghc >= 8.6)
+    exposed-modules:
+       Data.Barbie.Bi
+         -- requires QuantifiedConstraints
 
   other-modules:
       Data.Barbie.Internal.Bare
