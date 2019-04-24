@@ -43,6 +43,7 @@ library
       Data.Barbie.Internal.FlipB
       Data.Barbie.Internal.Functor
       Data.Barbie.Internal.Instances
+      Data.Barbie.Internal.Nested
       Data.Barbie.Internal.Product
       Data.Barbie.Internal.ProductC
       Data.Barbie.Internal.Traversable
