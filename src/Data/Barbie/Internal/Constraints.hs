@@ -93,7 +93,7 @@ class FunctorB b => ConstraintsB (b :: (k -> *) -> *) where
 -- | Like 'bmap' but a constraint is allowed to be required on
 --   each element of @b@
 --
--- E.g. If all fields of 'b' are 'Show'able then you 
+-- E.g. If all fields of 'b' are 'Show'able then you
 -- could store each shown value in it's slot using 'Const':
 --
 -- > showFields :: (AllB Show b, ConstraintsB b) => b Identity -> b (Const String)
@@ -173,7 +173,7 @@ gbaddDictsDefault
     )
   => b f -> b (Dict c `Product` f)
 gbaddDictsDefault
-  = toN . gbaddDicts @c @f @(GAllBRep b) . fromN
+  = toN . gbaddDicts @_ @c @f @(GAllBRep b) . fromN
 {-# INLINE gbaddDictsDefault #-}
 
 class GAllBC (repbf :: * -> *) where
@@ -195,7 +195,7 @@ instance
     => GConstraintsB c f (M1 i k repbx)
                          (M1 i k repbf)
                          (M1 i k repbdf) where
-  gbaddDicts = M1 . gbaddDicts @c @f @repbx . unM1
+  gbaddDicts = M1 . gbaddDicts @_ @c @f @repbx . unM1
   {-# INLINE gbaddDicts #-}
 
 
@@ -226,7 +226,7 @@ instance
                          (lf  :*: rf)
                          (ldf :*: rdf) where
   gbaddDicts (l :*: r)
-    = (gbaddDicts @c @f @lx l) :*: (gbaddDicts @c @f @rx r)
+    = (gbaddDicts @_ @c @f @lx l) :*: (gbaddDicts @_ @c @f @rx r)
   {-# INLINE gbaddDicts #-}
 
 
@@ -240,8 +240,8 @@ instance
                          (lf  :+: rf)
                          (ldf :+: rdf) where
   gbaddDicts = \case
-    L1 l -> L1 (gbaddDicts @c @f @lx l)
-    R1 r -> R1 (gbaddDicts @c @f @rx r)
+    L1 l -> L1 (gbaddDicts @_ @c @f @lx l)
+    R1 r -> R1 (gbaddDicts @_ @c @f @rx r)
   {-# INLINE gbaddDicts #-}
 
 

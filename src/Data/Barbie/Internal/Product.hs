@@ -160,12 +160,12 @@ gbprodDefault
   .  CanDeriveProductB b f g
   => b f -> b g -> b (f `Product` g)
 gbprodDefault l r
-  = toN $ gbprod @f @g (fromN l) (fromN r)
+  = toN $ gbprod @_ @f @g (fromN l) (fromN r)
 {-# INLINE gbprodDefault #-}
 
 gbuniqDefault:: forall b f . CanDeriveProductB b f f => (forall a . f a) -> b f
 gbuniqDefault x
-  = toN (gbuniq @f @f @_ @(RepN (b f)) @(RepN (b (f `Product` f))) x)
+  = toN (gbuniq @_ @f @f @_ @(RepN (b f)) @(RepN (b (f `Product` f))) x)
 {-# INLINE gbuniqDefault #-}
 
 class GProductB (f :: k -> *) (g :: k -> *) repbf repbg repbfg where
@@ -180,10 +180,10 @@ class GProductB (f :: k -> *) (g :: k -> *) repbf repbg repbfg where
 instance GProductB f g repf repg repfg => GProductB f g (M1 i c repf)
                                                         (M1 i c repg)
                                                         (M1 i c repfg) where
-  gbprod (M1 l) (M1 r) = M1 (gbprod @f @g l r)
+  gbprod (M1 l) (M1 r) = M1 (gbprod @_ @f @g l r)
   {-# INLINE gbprod #-}
 
-  gbuniq x = M1 (gbuniq @f @g @repf @repg @repfg x)
+  gbuniq x = M1 (gbuniq @_ @f @g @repf @repg @repfg x)
   {-# INLINE gbuniq #-}
 
 
@@ -203,11 +203,11 @@ instance
   gbprod (l1 :*: l2) (r1 :*: r2)
     = (l1 `lprod` r1) :*: (l2 `rprod` r2)
     where
-      lprod = gbprod @f @g
-      rprod = gbprod @f @g
+      lprod = gbprod @_ @f @g
+      rprod = gbprod @_ @f @g
   {-# INLINE gbprod #-}
 
-  gbuniq x = (gbuniq @f @g @lf @lg @lfg x :*: gbuniq @f @g @rf @rg @rfg x)
+  gbuniq x = (gbuniq @_ @f @g @lf @lg @lfg x :*: gbuniq @_ @f @g @rf @rg @rfg x)
   {-# INLINE gbuniq #-}
 
 
